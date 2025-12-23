@@ -8,3 +8,4 @@ lightgbm
 mlflow
 fastparquet
 pyarrow
+flask

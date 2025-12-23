@@ -1,0 +1,148 @@
+/* RESET + BASE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1d3557, #457b9d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+}
+
+/* CONTAINER CARD */
+.container {
+    background: #ffffff;
+    width: 100%;
+    max-width: 520px;
+    padding: 30px 35px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+/* TITLE */
+.container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #1d3557;
+    font-weight: 700;
+}
+
+/* FORM GROUP */
+.form-group {
+    margin-bottom: 18px;
+}
+
+/* LABELS */
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #1d3557;
+}
+
+/* INPUTS & SELECTS */
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+/* FOCUS EFFECT */
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #457b9d;
+    box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.2);
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    background: linear-gradient(135deg, #457b9d, #1d3557);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* BUTTON HOVER */
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+/* BUTTON ACTIVE */
+button:active {
+    transform: scale(0.98);
+}
+
+/* RESULT BOX */
+.result {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    animation: slideUp 0.5s ease;
+}
+
+/* RESULT STATES */
+.result p {
+    margin: 0;
+}
+
+.result p:contains("cancel") {
+    color: #e63946;
+}
+
+.result p:contains("not") {
+    color: #2a9d8f;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .container {
+        padding: 25px 20px;
+    }
+}
