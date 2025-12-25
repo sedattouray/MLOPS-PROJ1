@@ -4,73 +4,62 @@ pipeline {
     environment {
         VENV_DIR = 'venv'
         GCP_PROJECT = "i-beaker-479319-a9"
-        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
-        PATH = "/usr/bin:$PATH" // ensure python3 is accessible
+        IMAGE_NAME = "hotel-reservation-prediction"
     }
 
     stages {
 
-        stage('Cloning Github repo to Jenkins') {
+        stage('Cloning Github repo') {
             steps {
-                script {
-                    echo 'Cloning Github repo to Jenkins...'
-                    checkout scmGit(
-                        branches: [[name: '*/main']],
-                        extensions: [],
-                        userRemoteConfigs: [[
-                            credentialsId: 'github-token',
-                            url: 'https://github.com/sedattouray/MLOPS-PROJ1.git'
-                        ]]
-                    )
-                }
+                echo 'Cloning Github repo...'
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github-token',
+                        url: 'https://github.com/sedattouray/MLOPS-PROJ1.git'
+                    ]]
+                )
             }
         }
 
-        stage('Setting up Virtual Environment and Installing Dependencies') {
+        stage('Setup Python Environment') {
             steps {
-                script {
-                    echo 'Setting up virtual environment and installing dependencies...'
-                    // Remove old venv if it exists
-                    sh "rm -rf ${VENV_DIR}"
-                    // Create a new virtual environment using python3
-                    sh "python3 -m venv ${VENV_DIR}"
-                    // Activate the virtual environment and install dependencies
-                    sh """
-                        . ${VENV_DIR}/bin/activate
-                        pip install --upgrade pip
-                        pip install -e .
-                    """
-                }
+                echo 'Setting up Python virtual environment and installing dependencies...'
+                sh '''
+                    python3 -m venv ${VENV_DIR}
+                    . ${VENV_DIR}/bin/activate
+                    pip install --upgrade pip
+                    pip install -e .
+                '''
             }
         }
 
-        stage('Building and Pushing Docker Image to GCR') {
+        stage('Build and Push Docker Image to GCR') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    script {
-                        echo 'Building and pushing Docker image to Google Container Registry...'
-                        sh """
-                            export PATH=\$PATH:${GCLOUD_PATH}
-                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                    // Run gcloud commands inside official gcloud container
+                    docker.image('google/cloud-sdk:latest').inside {
+                        sh '''
+                            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
                             gcloud config set project ${GCP_PROJECT}
                             gcloud auth configure-docker --quiet
 
-                            docker build -t gcr.io/${GCP_PROJECT}/hotel-reservation-prediction:latest .
-                            docker push gcr.io/${GCP_PROJECT}/hotel-reservation-prediction:latest
-                        """
+                            docker build -t gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest .
+                            docker push gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest
+                        '''
                     }
                 }
             }
         }
-
     }
 
     post {
-        failure {
-            echo 'Pipeline failed. Check logs for errors.'
-        }
         success {
             echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for errors.'
         }
     }
 }
