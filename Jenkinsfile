@@ -9,9 +9,9 @@ pipeline {
 
     stages {
 
-        stage('Cloning Github repo') {
+        stage('Cloning Github repo to Jenkins') {
             steps {
-                echo 'Cloning Github repo...'
+                echo 'Cloning Github repo to Jenkins...'
                 checkout scmGit(
                     branches: [[name: '*/main']],
                     extensions: [],
@@ -23,9 +23,9 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Setting up Virtual Environment and Installing Dependencies') {
             steps {
-                echo 'Setting up Python virtual environment and installing dependencies...'
+                echo 'Setting up virtual environment and installing dependencies...'
                 sh '''
                     python3 -m venv ${VENV_DIR}
                     . ${VENV_DIR}/bin/activate
@@ -35,31 +35,34 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image to GCR') {
+        stage('Building and Pushing Docker Image to GCR') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    // Run gcloud commands inside official gcloud container
-                    docker.image('google/cloud-sdk:latest').inside {
-                        sh '''
-                            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                            gcloud config set project ${GCP_PROJECT}
-                            gcloud auth configure-docker --quiet
+                    script {
+                        // Use official Google Cloud SDK image to avoid missing gcloud errors
+                        docker.image('google/cloud-sdk:latest').inside('--privileged') {
+                            sh '''
+                                gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                                gcloud config set project ${GCP_PROJECT}
+                                gcloud auth configure-docker --quiet
 
-                            docker build -t gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest .
-                            docker push gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest
-                        '''
+                                docker build -t gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest .
+                                docker push gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest
+                            '''
+                        }
                     }
                 }
             }
         }
+
     }
 
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
         failure {
             echo 'Pipeline failed. Check logs for errors.'
+        }
+        success {
+            echo 'Pipeline completed successfully!'
         }
     }
 }
