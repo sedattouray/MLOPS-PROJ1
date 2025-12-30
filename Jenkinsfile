@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         VENV_DIR = 'venv'
-        GCP_PROJECT = 'i-beaker-479319-a9'
+        GCP_PROJECT = "i-beaker-479319-a9"
         GCLOUD_PATH = '/var/jenkins_home/google-cloud-sdk/bin'
     }
 
@@ -45,17 +45,17 @@ pipeline {
                     script {
                         echo 'Building and pushing Docker image to Google Container Registry...'
                         sh '''
-                            export PATH=$PATH:${GCLOUD_PATH}
+                        export PATH=$PATH:${GCLOUD_PATH}
 
-                            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        gcloud auth activate-service-account --key-file = ${GOOGLE_APPLICATION_CREDENTIALS}
 
-                            gcloud config set project ${GCP_PROJECT}
+                        gcloud config set project ${GCP_PROJECT}
 
-                            gcloud auth configure-docker --quiet
+                        gcloud auth configure-docker --quiet
 
-                            docker build -t gcr.io/${GCP_PROJECT}/hotel-reservation-prediction:latest .
+                        docker build -t gcr.io/${GCP_PROJECT}/hotel-project:latest .
 
-                            docker push gcr.io/${GCP_PROJECT}/hotel-reservation-prediction:latest
+                        docker push gcr.io/${GCP_PROJECT}/hotel-project:latest
                         '''
                     }
                 }
@@ -64,12 +64,4 @@ pipeline {
 
     }
 
-    post {
-        failure {
-            echo 'Pipeline failed. Check logs for errors.'
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-    }
 }
