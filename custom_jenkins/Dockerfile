@@ -18,14 +18,13 @@ RUN apt-get update -y && apt-get install -y \
     unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK
+# Install Google Cloud SDK as root
+USER root
 RUN curl -fsSL https://sdk.cloud.google.com | bash
 
-# Make gcloud available system-wide
+# Make gcloud executable available to all users
 ENV PATH="/root/google-cloud-sdk/bin:${PATH}"
-
-# Allow Jenkins user to use Docker
-RUN groupadd -f docker && usermod -aG docker jenkins
+RUN chmod -R a+rx /root/google-cloud-sdk
 
 # Switch back to Jenkins user
 USER jenkins
