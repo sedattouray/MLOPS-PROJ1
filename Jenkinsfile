@@ -3,65 +3,65 @@ pipeline {
 
     environment {
         VENV_DIR = 'venv'
-        GCP_PROJECT = "i-beaker-479319-a9"
-        GCLOUD_PATH = '/var/jenkins_home/google-cloud-sdk/bin'
+        GCP_PROJECT = 'i-beaker-479319-a9'
+        IMAGE_NAME = 'gcr.io/i-beaker-479319-a9/hotel-project:latest'
     }
 
     stages {
 
-        stage('Cloning Github repo to Jenkins') {
+        stage('Clone GitHub Repo') {
             steps {
-                script {
-                    echo 'Cloning Github repo to Jenkins...'
-                    checkout scmGit(
-                        branches: [[name: '*/main']],
-                        extensions: [],
-                        userRemoteConfigs: [[
-                            credentialsId: 'github-token',
-                            url: 'https://github.com/sedattouray/MLOPS-PROJ1.git'
-                        ]]
-                    )
-                }
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github-token',
+                        url: 'https://github.com/sedattouray/MLOPS-PROJ1.git'
+                    ]]
+                )
             }
         }
 
-        stage('Setting up Virtual Environment and Installing Dependencies') {
+        stage('Setup Python Virtual Environment') {
             steps {
-                script {
-                    echo 'Setting up virtual environment and installing dependencies...'
+                sh '''
+                python3 -m venv ${VENV_DIR}
+                . ${VENV_DIR}/bin/activate
+                pip install --upgrade pip
+                pip install -e .
+                '''
+            }
+        }
+
+        stage('Build & Push Docker Image to GCR') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
-                    python -m venv ${VENV_DIR}
-                    . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-                    pip install -e .
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud config set project ${GCP_PROJECT}
+                    gcloud auth configure-docker --quiet
+
+                    docker build -t ${IMAGE_NAME} .
+                    docker push ${IMAGE_NAME}
                     '''
                 }
             }
         }
 
-        stage('Building and Pushing Docker Image to GCR') {
+        stage('Deploy to Cloud Run') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    script {
-                        echo 'Building and pushing Docker image to Google Container Registry...'
-                        sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}
+                    sh '''
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud config set project ${GCP_PROJECT}
 
-                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-
-                        gcloud config set project ${GCP_PROJECT}
-
-                        gcloud auth configure-docker --quiet
-
-                        docker build -t gcr.io/${GCP_PROJECT}/hotel-project:latest .
-
-                        docker push gcr.io/${GCP_PROJECT}/hotel-project:latest
-                        '''
-                    }
+                    gcloud run deploy hotel-service \
+                      --image ${IMAGE_NAME} \
+                      --platform managed \
+                      --region us-central1 \
+                      --allow-unauthenticated
+                    '''
                 }
             }
         }
-
     }
-
 }
