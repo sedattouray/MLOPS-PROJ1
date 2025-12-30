@@ -30,10 +30,10 @@ pipeline {
                 script {
                     echo 'Setting up virtual environment and installing dependencies...'
                     sh '''
-                        python -m venv ${VENV_DIR}
-                        . ${VENV_DIR}/bin/activate
-                        pip install --upgrade pip
-                        pip install -e .
+                    python -m venv ${VENV_DIR}
+                    . ${VENV_DIR}/bin/activate
+                    pip install --upgrade pip
+                    pip install -e .
                     '''
                 }
             }
