@@ -28,5 +28,5 @@ RUN python pipeline/training_pipeline.py
 EXPOSE 5000
 
 # Command to run the app
-CMD ["python", "application.py"]
+CMD ["python3", "application.py"]
 
