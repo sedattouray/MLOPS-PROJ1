@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         VENV_DIR = 'venv'
-        GCP_PROJECT = "i-beaker-479319-a9"
-        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
+        GCP_PROJECT = 'i-beaker-479319-a9'
+        GCLOUD_PATH = '/var/jenkins_home/google-cloud-sdk/bin'
     }
 
     stages {
