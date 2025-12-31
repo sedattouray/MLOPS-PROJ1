@@ -14,15 +14,14 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK (system-wide)
-RUN curl -fsSL https://sdk.cloud.google.com | bash \
-    && mv /root/google-cloud-sdk /usr/local/google-cloud-sdk \
-    && ln -s /usr/local/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
+# Install Google Cloud SDK
+RUN curl -fsSL https://sdk.cloud.google.com | bash
 
-# Match Docker socket GID (host socket = GID 1)
+# Make gcloud available system-wide
+ENV PATH="/root/google-cloud-sdk/bin:${PATH}"
+
+# IMPORTANT: Match Docker socket group (GID 1 on Mac)
 RUN groupadd -g 1 docker || true \
     && usermod -aG docker jenkins
 
 USER jenkins
-
-ENV PATH="/usr/local/google-cloud-sdk/bin:${PATH}"
