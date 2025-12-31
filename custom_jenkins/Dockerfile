@@ -2,27 +2,26 @@ FROM jenkins/jenkins:lts
 
 USER root
 
-# Install dependencies
+# Install deps
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-venv \
     python3-pip \
-    docker.io \
     curl \
     ca-certificates \
     gnupg \
-    apt-transport-https \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK (NON-INTERACTIVE, SYSTEM-WIDE)
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" \
-    > /etc/apt/sources.list.d/google-cloud-sdk.list \
-    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
-    | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
-    && apt-get update && apt-get install -y google-cloud-cli \
-    && rm -rf /var/lib/apt/lists/*
+# Create docker group with HOST GID (IMPORTANT)
+ARG DOCKER_GID=1
+RUN groupadd -g ${DOCKER_GID} docker || true \
+ && usermod -aG docker jenkins
 
-# Docker permissions
-RUN groupadd -f docker && usermod -aG docker jenkins
+# Install Google Cloud SDK (correct way)
+RUN curl -sSL https://sdk.cloud.google.com | bash
+
+# Make gcloud available to ALL users
+ENV PATH="/root/google-cloud-sdk/bin:/usr/local/bin:/usr/bin:/bin"
 
 USER jenkins
