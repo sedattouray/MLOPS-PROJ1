@@ -38,7 +38,7 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
-                    ENV PATH='/root/google-cloud-sdk/bin:/usr/local/bin:/usr/bin:/bin'
+                    
                     gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
                     gcloud config set project ${GCP_PROJECT}
                     gcloud auth configure-docker --quiet
