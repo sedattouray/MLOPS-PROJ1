@@ -13,14 +13,12 @@ RUN apt-get update && apt-get install -y \
     docker.io \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK (non-interactive)
-RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
+# Install Google Cloud SDK SYSTEM-WIDE
+RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+    > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    apt-get update && apt-get install -y google-cloud-cli
 
-ENV PATH="/root/google-cloud-sdk/bin:/usr/local/bin:/usr/bin:/bin"
-
-# Fix Docker permissions (CRITICAL)
-RUN groupadd -g 1 docker || true \
-    && usermod -aG docker jenkins \
-    && chmod 666 /var/run/docker.sock || true
-
-USER jenkins
+# Keep Jenkins running as root (important)
+USER root
