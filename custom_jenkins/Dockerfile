@@ -11,17 +11,16 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     gnupg \
     docker.io \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK
-RUN curl -fsSL https://sdk.cloud.google.com | bash
+# Install Google Cloud SDK (non-interactive)
+RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
 
-# Make gcloud available system-wide
-ENV PATH="/root/google-cloud-sdk/bin:${PATH}"
+ENV PATH="/root/google-cloud-sdk/bin:/usr/local/bin:/usr/bin:/bin"
 
-# IMPORTANT: Match Docker socket group (GID 1 on Mac)
+# Fix Docker permissions (CRITICAL)
 RUN groupadd -g 1 docker || true \
-    && usermod -aG docker jenkins
+    && usermod -aG docker jenkins \
+    && chmod 666 /var/run/docker.sock || true
 
 USER jenkins
